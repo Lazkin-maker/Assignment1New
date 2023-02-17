@@ -9,7 +9,7 @@ Each hero has a function to display all specification, such as(Name, Type class 
 
 Lastly, some unit test maded to test all functions that implemented in Heroes classes. 
 
-#Build 
+# Build 
 In order to run and test the functions, basically right click on one the intended test_Class Ex: (MageTestClass), and select run test. In addition, in program.cs, we can create instance of any type of hero and make changes on it and console out the result.
 
 # Project status :
