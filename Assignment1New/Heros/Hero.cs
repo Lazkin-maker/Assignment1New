@@ -1,0 +1,144 @@
+﻿using Assignment1New.EnumType;
+using Assignment1New.Exceptions;
+using Assignment1New.Heros.Items;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Assignment1New.Heros
+{
+    public abstract class Hero
+    {
+        protected string name;
+        protected int level = 1;
+        // protected string weapon;
+        private Weapon equippedWeapon;
+        protected string armor;
+        protected List<Weapon> equipments = new List<Weapon>();
+        protected List<WeaponType> ValidWeaponTypes;
+        protected List<ArmorType> ValidArmorTypes;
+
+        public HeroAttribute Attribute { get; set; }
+        public Weapon weapon { get; set; }
+
+        public HeroAttribute totalAttribute
+        {
+            get
+            {
+                HeroAttribute totalAttribute = new HeroAttribute(Attribute.Strength, Attribute.Dexterity, Attribute.Intelligence);
+                foreach (var item in equipment)
+                {
+                    if (item.Value is Armor)
+                    {
+                        Armor armor = (Armor)item.Value;
+                        totalAttribute.Strength += armor.ArmoAttribute.Strength;
+                        totalAttribute.Dexterity += armor.ArmoAttribute.Dexterity;
+                        totalAttribute.Intelligence += armor.ArmoAttribute.Intelligence;
+                    }
+                }
+                return totalAttribute;
+            }
+        }
+
+        public virtual int CalculateDamage()
+        {
+            int damageAttribute = 0;
+            switch (this)
+            {
+                case Mage w:
+                    damageAttribute = w.totalAttribute.Intelligence;
+                    break;
+
+                case Ranger r:
+                    damageAttribute = r.totalAttribute.Dexterity;
+                    break;
+            }
+
+            int weaponDamage = equippedWeapon != null ? equippedWeapon.Damage : 1;
+            //int weaponDamage = equippedWeapon != null ? equippedWeapon.Damage + damageAttribute : damageAttribute;
+
+            return weaponDamage * (1 + damageAttribute / 100);
+        }
+
+        protected Dictionary<Slot, Item> equipment;
+
+
+        public string Name { get => name; set => name = value; }
+        public int Level { get => level; set => level = value; }
+
+
+        public Hero(string name)
+        {
+            Name = name;
+            equipment = new Dictionary<Slot, Item>
+            {
+                {Slot.Head, null},
+                {Slot.Body, null},
+                {Slot.Legs, null},
+                {Slot.Weapon, null}
+            };
+        }
+
+
+        public virtual void EquipItem(Item item)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+            if (item.RequiredLevel > Level)
+            {
+                throw new InvalidItemException($"{Name}cannot equip {item.Name} because it requires level {item.RequiredLevel}.");
+            }
+            equipment[item.Slot] = item;
+            if (item is Weapon)
+            {
+                equippedWeapon = (Weapon)item;
+
+            }
+        }
+
+        public virtual void EquipArmor(Armor armor)
+        {
+            if (armor == null)
+            {
+                throw new ArgumentNullException(nameof(armor));
+            }
+            if (armor.RequiredLevel > Level)
+            {
+                throw new InvalidArmorException($"{Name} cannot equip {armor.Name} because it requires level {armor.RequiredLevel}.");
+            }
+
+            equipment[armor.Slot] = armor;
+        }
+
+
+        public abstract int LevelUp();
+
+        public string display()
+        {
+            try
+            {
+                StringBuilder heroInfo = new StringBuilder();
+
+                heroInfo.AppendLine("Hero's name: " + (this.name != null ? this.name : "Empty"));
+                heroInfo.AppendLine("Hero's Class: " + (this.GetType().Name != null ? this.GetType().Name : "Empty"));
+                heroInfo.AppendLine("Hero's level: " + (this.level > 0 ? this.level.ToString() : "Empty"));
+                heroInfo.AppendLine("Hero's strength: " + (this.totalAttribute.Strength > 0 ? this.totalAttribute.Strength.ToString() : "Empty"));
+                heroInfo.AppendLine("Hero's dexterity: " + (this.totalAttribute.Dexterity > 0 ? this.totalAttribute.Dexterity.ToString() : "Empty"));
+                heroInfo.AppendLine("Hero's intelligence: " + (this.totalAttribute.Intelligence > 0 ? this.totalAttribute.Intelligence.ToString() : "Empty"));
+                heroInfo.AppendLine("Hero's damage: " + (this.CalculateDamage() > 0 ? this.CalculateDamage().ToString() : "Empty"));
+
+                return heroInfo.ToString();
+
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
+
+    }
+}
